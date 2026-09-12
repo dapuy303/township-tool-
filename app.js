@@ -1,27 +1,45 @@
-const $=id=>document.getElementById(id);
-let resources=JSON.parse(localStorage.getItem("tt_resources")||"[]");
-function save(){localStorage.setItem("tt_resources",JSON.stringify(resources))}
-function esc(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
-function render(){
- $("resourceList").innerHTML="";
- resources.forEach((r,i)=>{
-  const pct=r.needed?Math.min(100,Math.round(r.owned/r.needed*100)):100, miss=Math.max(0,r.needed-r.owned);
-  const el=document.createElement("div");el.className="resource";
-  el.innerHTML=`<div class="resourceTop"><b>${esc(r.name)}</b><small>${r.owned}/${r.needed}</small></div><div class="bar"><i style="width:${pct}%"></i></div><div class="${miss?"missing":"ok"}">${miss?"Kurang "+miss:"✓ Resource cukup"}</div>`;
-  el.onclick=()=>{if(confirm("Hapus resource ini?")){resources.splice(i,1);save();render()}};
-  $("resourceList").appendChild(el);
- });
- $("clearResources").style.display=resources.length?"block":"none";
- $("itemCount").textContent=resources.length;
- $("score").textContent=resources.filter(r=>r.owned>=r.needed).length;
-}
-$("addResource").onclick=()=>{let name=$("itemName").value.trim(),owned=+($("owned").value)||0,needed=+($("needed").value)||0;if(!name)return alert("Isi nama item.");resources.push({name,owned,needed});save();render();$("itemName").value="";$("owned").value="";$("needed").value=""};
-$("clearResources").onclick=()=>{if(confirm("Hapus semua resource?")){resources=[];save();render()}};
-function calc(){let q=Math.max(0,+$("quantity").value||0),m=Math.max(0,+$("minutes").value||0),t=q*m,h=Math.floor(t/60),mi=Math.floor(t%60);$("totalTime").textContent=`${h}j ${mi}m`;$("totalMinutes").textContent=Math.round(t)}
-$("quantity").oninput=calc;$("minutes").oninput=calc;calc();render();
+const KEY="township-tool-v2";
+const PRESETS=["Wheat","Corn","Carrot","Sugarcane","Milk","Egg","Bread","Feed","Wood","Stone","Clay","Glass","Cotton","Rubber","Ore"];
+const defaultState={resources:[],tasks:[],productions:[],xp:0,theme:"dark"};
+let state=load(), timer=null, remaining=0;
 
-function openTab(id){document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===id));document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id===id));scrollTo({top:0,behavior:"smooth"})}
-document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>openTab(b.dataset.tab));
-document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>openTab(b.dataset.go));
-$("themeBtn").onclick=()=>document.body.classList.toggle("light");
-if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));
+function load(){try{return {...defaultState,...JSON.parse(localStorage.getItem(KEY)||"{}")}}catch{return {...defaultState}}}
+function save(){localStorage.setItem(KEY,JSON.stringify(state));renderAll()}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)}
+function xpGoal(lv){return 100+(lv-1)*50}
+function levelData(){let xp=state.xp,lv=1,goal=xpGoal(lv);while(xp>=goal){xp-=goal;lv++;goal=xpGoal(lv)}return{lv,xp,goal}}
+function addXP(n){state.xp=Math.max(0,state.xp+n);save();toast(`+${n} XP!`)}
+function fmtMin(min){min=Number(min)||0;let total=Math.round(min*60),h=Math.floor(total/3600),m=Math.floor(total%3600/60),s=total%60;return h?`${h}j ${m}m`:m?`${m}m ${s}s`:`${s}s`}
+function renderAll(){renderLevel();renderStats();renderResources();renderProduction();renderTasks();applyTheme()}
+function renderLevel(){const d=levelData();document.getElementById("levelText").textContent=`Lv. ${d.lv}`;document.getElementById("xpText").textContent=`${d.xp} XP`;document.getElementById("xpGoal").textContent=`/ ${d.goal} XP`;document.getElementById("xpBar").style.width=`${Math.min(100,d.xp/d.goal*100)}%`;document.getElementById("levelHint").textContent=`${d.goal-d.xp} XP lagi menuju level berikutnya.`}
+function renderStats(){document.getElementById("itemCount").textContent=state.resources.length;document.getElementById("totalMinutes").textContent=Math.round(state.productions.reduce((a,p)=>a+p.total,0));const done=state.tasks.filter(t=>t.done).length;document.getElementById("score").textContent=done;document.getElementById("taskBadge").textContent=`${done} selesai`;const need=state.resources.filter(r=>r.needed>r.owned).length;document.getElementById("progressSummary").textContent=state.resources.length?`${Math.round((state.resources.length-need)/state.resources.length*100)}% siap`:"0% siap"}
+function renderResources(){const list=document.getElementById("resourceList"),q=(document.getElementById("resourceSearch")?.value||"").toLowerCase(),f=document.getElementById("resourceFilter")?.value||"all";const arr=state.resources.filter(r=>r.name.toLowerCase().includes(q)).filter(r=>f==="all"||(f==="need"?r.needed>r.owned:r.owned>=r.needed));list.innerHTML=arr.length?arr.map(r=>{const pct=r.needed?Math.min(100,r.owned/r.needed*100):100,need=Math.max(0,r.needed-r.owned);return `<div class="resourceItem"><div class="itemTop"><div><div class="itemName">${esc(r.name)}</div><div class="sub">${r.owned} dimiliki • ${r.needed} dibutuhkan</div></div><button class="deleteBtn" data-del-resource="${r.id}">Hapus</button></div><div class="progress"><span style="width:${pct}%"></span></div><div class="sub ${need?"need":"ready"}">${need?`Kurang ${need}`:"✓ Kebutuhan terpenuhi"}</div></div>`}).join(""):`<div class="card"><span style="color:var(--muted)">Belum ada resource yang cocok.</span></div>`;document.querySelectorAll("[data-del-resource]").forEach(b=>b.onclick=()=>{state.resources=state.resources.filter(x=>x.id!==b.dataset.delResource);addXP(5)})}
+function renderProduction(){const qty=+document.getElementById("quantity").value||0,min=+document.getElementById("minutes").value||0,f=Math.max(1,+document.getElementById("factories").value||1);const total=qty*min/f;document.getElementById("totalTime").textContent=fmtMin(total);document.getElementById("finishText").textContent=timer?`Timer aktif • ${fmtMin(remaining/60)} tersisa`:`Estimasi ${f} pabrik aktif`;const list=document.getElementById("productionList");list.innerHTML=state.productions.map(p=>`<div class="prodItem"><div class="prodTop"><div><b>${esc(p.name)}</b><div class="sub">${p.qty} item • ${p.factories} pabrik • ${fmtMin(p.total)}</div></div><button class="deleteBtn" data-del-prod="${p.id}">×</button></div></div>`).join("");document.querySelectorAll("[data-del-prod]").forEach(b=>b.onclick=()=>{state.productions=state.productions.filter(x=>x.id!==b.dataset.delProd);save()})}
+function renderTasks(){const f=document.getElementById("taskFilter")?.value||"all",list=document.getElementById("taskList");const arr=state.tasks.filter(t=>f==="all"||(f==="done"?t.done:!t.done));list.innerHTML=arr.length?arr.map(t=>`<div class="taskItem ${t.done?"done":""}"><div class="taskTop"><div class="taskNameText">${esc(t.name)}</div><span class="priority ${t.priority}">${t.priority==="high"?"TINGGI":"NORMAL"}</span></div><div class="sub">⭐ ${t.xp} XP</div><div class="taskActions"><button class="checkBtn" data-task="${t.id}">${t.done?"↩ Buka lagi":"✓ Selesaikan"}</button><button class="deleteBtn" data-del-task="${t.id}">Hapus</button></div></div>`).join(""):`<div class="card"><span style="color:var(--muted)">Belum ada task.</span></div>`;document.querySelectorAll("[data-task]").forEach(b=>b.onclick=()=>{const t=state.tasks.find(x=>x.id===b.dataset.task);if(t){t.done=!t.done;if(t.done)addXP(t.xp);else{state.xp=Math.max(0,state.xp-t.xp);save()}}});document.querySelectorAll("[data-del-task]").forEach(b=>b.onclick=()=>{state.tasks=state.tasks.filter(x=>x.id!==b.dataset.delTask);save()})}
+function applyTheme(){document.body.classList.toggle("light",state.theme==="light");document.getElementById("themeBtn").textContent=state.theme==="light"?"🌙":"☀️"}
+function go(tab){document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id===tab));document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));window.scrollTo({top:0,behavior:"smooth"})}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>go(b.dataset.tab));document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
+
+document.getElementById("themeBtn").onclick=()=>{state.theme=state.theme==="light"?"dark":"light";save()};
+document.getElementById("resetBtn").onclick=()=>{if(confirm("Reset semua data Township Tool V2?")){state={...defaultState};localStorage.removeItem(KEY);renderAll();toast("Data direset")}};
+document.getElementById("addResource").onclick=()=>{const name=document.getElementById("itemName").value.trim();if(!name)return toast("Masukkan nama item");state.resources.push({id:crypto.randomUUID(),name,owned:Math.max(0,+document.getElementById("owned").value||0),needed:Math.max(0,+document.getElementById("needed").value||0)});["itemName","owned","needed"].forEach(id=>document.getElementById(id).value=id==="owned"||id==="needed"?0:"");addXP(10);go("resources")};
+document.getElementById("presetBtn").onclick=()=>{const n=PRESETS[Math.floor(Math.random()*PRESETS.length)];document.getElementById("itemName").value=n;toast(`Preset: ${n}`)};
+document.getElementById("resourceSearch").oninput=renderResources;document.getElementById("resourceFilter").onchange=renderResources;
+
+["quantity","minutes","factories"].forEach(id=>document.getElementById(id).oninput=renderProduction);
+document.getElementById("startTimer").onclick=()=>{const qty=+quantity.value||1,min=+minutes.value||0,f=Math.max(1,+factories.value||1);remaining=qty*min*60/f;if(remaining<=0)return toast("Atur waktu produksi dulu");if(timer)clearInterval(timer);timer=setInterval(()=>{remaining--;renderProduction();if(remaining<=0){clearInterval(timer);timer=null;toast("⏰ Produksi selesai!");renderProduction()}},1000);renderProduction();toast("Timer dimulai")};
+document.getElementById("stopTimer").onclick=()=>{if(timer){clearInterval(timer);timer=null;remaining=0;renderProduction();toast("Timer dihentikan")}};
+
+document.getElementById("prodName").oninput=()=>{};
+document.getElementById("startTimer").addEventListener("click",()=>{const name=document.getElementById("prodName").value.trim()||"Produksi";const qty=+quantity.value||1,min=+minutes.value||0,f=Math.max(1,+factories.value||1);state.productions.unshift({id:crypto.randomUUID(),name,qty,factories:f,total:qty*min/f});state.productions=state.productions.slice(0,20);save()});
+document.getElementById("clearProduction").onclick=()=>{state.productions=[];save();toast("Riwayat produksi dibersihkan")};
+
+document.getElementById("addTask").onclick=()=>{const name=document.getElementById("taskName").value.trim();if(!name)return toast("Masukkan nama task");const xp=Math.max(1,+document.getElementById("taskXp").value||1);state.tasks.unshift({id:crypto.randomUUID(),name,xp,priority:document.getElementById("taskPriority").value,done:false});document.getElementById("taskName").value="";addXP(5)};
+document.getElementById("taskFilter").onchange=renderTasks;document.getElementById("clearTasks").onclick=()=>{state.tasks=[];save();toast("Semua task dihapus")};
+
+document.getElementById("exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="township-tool-v2-backup.json";a.click();URL.revokeObjectURL(a.href);toast("Backup dibuat")};
+document.getElementById("importFile").onchange=e=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);state={...defaultState,...x};save();toast("Backup berhasil diimport")}catch{toast("File backup tidak valid")}};r.readAsText(file)};
+
+document.getElementById("itemSuggestions").innerHTML=PRESETS.map(x=>`<option value="${x}">`).join("");
+renderAll();

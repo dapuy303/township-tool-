@@ -1,1 +1,17 @@
-{"name":"Township Tool","short_name":"Township Tool","start_url":"./","display":"standalone","background_color":"#10172b","theme_color":"#18233f","description":"Game companion untuk resource dan produksi."}
+{
+  "name": "Township Tool V2",
+  "short_name": "Township Tool",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#080f20",
+  "theme_color": "#0b1224",
+  "description": "Game companion untuk perencanaan resource, produksi dan tasks.",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

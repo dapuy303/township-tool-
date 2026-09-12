@@ -3,75 +3,118 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#18233f">
-<meta name="description" content="Township Tool - Game Companion">
+<meta name="theme-color" content="#0b1224">
+<meta name="description" content="Township Tool v2 - game companion untuk perencanaan resource dan produksi">
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="style.css">
-<title>Township Tool</title>
+<title>Township Tool v2</title>
 </head>
 <body>
 <div class="app">
-<header class="hero">
-  <div class="brand">
-    <div class="logo">🏘️</div>
-    <div><h1>Township Tool</h1><p>Game Companion</p></div>
-  </div>
-  <button id="themeBtn" class="iconBtn" aria-label="Tema">☀️</button>
-</header>
+  <header class="hero">
+    <div class="brand">
+      <div class="logo">🏘️</div>
+      <div><h1>Township Tool</h1><p>Game Companion <span class="v2">V2</span></p></div>
+    </div>
+    <button id="themeBtn" class="iconBtn" aria-label="Ganti tema">☀️</button>
+  </header>
 
-<section class="stats">
-  <div class="stat"><span>📦</span><b id="itemCount">0</b><small>Items</small></div>
-  <div class="stat"><span>⏱️</span><b id="totalMinutes">0</b><small>Menit</small></div>
-  <div class="stat"><span>⭐</span><b id="score">0</b><small>Tasks</small></div>
-</section>
+  <section class="levelCard">
+    <div class="levelTop">
+      <div><span class="eyebrow">TOWN LEVEL</span><strong id="levelText">Lv. 1</strong></div>
+      <div class="xpText"><b id="xpText">0 XP</b><small id="xpGoal">/ 100 XP</small></div>
+    </div>
+    <div class="xpBar"><span id="xpBar"></span></div>
+    <div class="levelBottom"><span id="levelHint">Tambahkan resource atau selesaikan task untuk mendapat XP.</span><button id="resetBtn" class="miniBtn">Reset</button></div>
+  </section>
 
-<nav class="tabs">
-  <button class="tab active" data-tab="dashboard">⌂<small>Home</small></button>
-  <button class="tab" data-tab="resources">📦<small>Resource</small></button>
-  <button class="tab" data-tab="production">⚙️<small>Produksi</small></button>
-</nav>
+  <section class="stats">
+    <div class="stat"><span>📦</span><b id="itemCount">0</b><small>Resource</small></div>
+    <div class="stat"><span>⏱️</span><b id="totalMinutes">0</b><small>Menit</small></div>
+    <div class="stat"><span>⭐</span><b id="score">0</b><small>Task</small></div>
+  </section>
 
-<main>
-<section id="dashboard" class="panel active">
-  <div class="titleRow"><div><p class="eyebrow">TOWN CENTER</p><h2>Dashboard</h2></div><span class="badge">ONLINE READY</span></div>
-  <div class="banner">
-    <div><h3>Rencanakan kotamu</h3><p>Hitung resource dan waktu produksi dengan cepat.</p></div>
-    <div class="bannerIcon">🏡</div>
-  </div>
-  <div class="grid">
-    <button class="feature" data-go="resources"><span>📦</span><b>Resource</b><small>Kelola kebutuhan</small></button>
-    <button class="feature" data-go="production"><span>⏱️</span><b>Produksi</b><small>Hitung waktu</small></button>
-  </div>
-  <div class="card tip"><span>💡</span><div><b>Tips</b><p>Tap item pada daftar resource untuk menghapusnya.</p></div></div>
-</section>
+  <nav class="tabs">
+    <button class="tab active" data-tab="dashboard"><span>⌂</span><small>Home</small></button>
+    <button class="tab" data-tab="resources"><span>📦</span><small>Resource</small></button>
+    <button class="tab" data-tab="production"><span>⚙️</span><small>Produksi</small></button>
+    <button class="tab" data-tab="tasks"><span>⭐</span><small>Tasks</small></button>
+  </nav>
 
-<section id="resources" class="panel">
-  <div class="titleRow"><div><p class="eyebrow">INVENTORY</p><h2>Resource</h2></div></div>
-  <div class="card form">
-    <input id="itemName" placeholder="Nama item, mis. Wheat">
-    <div class="two"><input id="owned" type="number" min="0" placeholder="Dimiliki"><input id="needed" type="number" min="0" placeholder="Dibutuhkan"></div>
-    <button id="addResource" class="primary">＋ Tambahkan Resource</button>
-  </div>
-  <div id="resourceList"></div>
-  <button id="clearResources" class="danger">Hapus semua</button>
-</section>
+  <main>
+    <section id="dashboard" class="panel active">
+      <div class="titleRow"><div><p class="eyebrow">TOWN CENTER</p><h2>Dashboard</h2></div><span class="badge">READY</span></div>
+      <div class="banner">
+        <div><h3>Bangun rencana yang lebih rapi</h3><p>Kelola resource, hitung produksi, dan pantau targetmu dalam satu tempat.</p></div>
+        <div class="bannerIcon">🏡</div>
+      </div>
+      <div class="grid">
+        <button class="feature" data-go="resources"><span>📦</span><b>Resource</b><small>Inventory & kebutuhan</small></button>
+        <button class="feature" data-go="production"><span>⏱️</span><b>Produksi</b><small>Timer & estimasi</small></button>
+        <button class="feature" data-go="tasks"><span>⭐</span><b>Tasks</b><small>Target harian</small></button>
+        <button class="feature" data-go="dashboard" id="quickStats"><span>📊</span><b>Progress</b><small id="progressSummary">0% siap</small></button>
+      </div>
+      <div class="card tip"><span>💡</span><div><b>Tips V2</b><p>Data disimpan otomatis di browser HP kamu. Gunakan Export Backup agar data mudah dipindahkan.</p></div></div>
+      <div class="card backup">
+        <div><b>Data & Backup</b><small>Export untuk menyimpan cadangan, Import untuk memulihkan.</small></div>
+        <div class="backupBtns"><button id="exportBtn" class="secondary">⬇ Export</button><label class="secondary fileBtn">⬆ Import<input id="importFile" type="file" accept=".json,application/json"></label></div>
+      </div>
+    </section>
 
-<section id="production" class="panel">
-  <div class="titleRow"><div><p class="eyebrow">FACTORY</p><h2>Produksi</h2></div></div>
-  <div class="card form">
-    <label>Jumlah item<input id="quantity" type="number" min="0" value="1"></label>
-    <label>Waktu per item (menit)<input id="minutes" type="number" min="0" step=".1" value="10"></label>
-  </div>
-  <div class="timeCard">
-    <span>⏳ TOTAL WAKTU</span>
-    <strong id="totalTime">0j 10m</strong>
-    <p>Estimasi berdasarkan input kamu</p>
-  </div>
-</section>
-</main>
+    <section id="resources" class="panel">
+      <div class="titleRow"><div><p class="eyebrow">INVENTORY</p><h2>Resource</h2></div></div>
+      <div class="card form">
+        <div class="suggestRow">
+          <label>Item<input id="itemName" list="itemSuggestions" placeholder="Mis. Wheat"></label>
+          <button id="presetBtn" class="secondary presetBtn">⚡ Preset</button>
+        </div>
+        <datalist id="itemSuggestions"></datalist>
+        <div class="two"><label>Dimiliki<input id="owned" type="number" min="0" value="0"></label><label>Dibutuhkan<input id="needed" type="number" min="0" value="0"></label></div>
+        <button id="addResource" class="primary">＋ Tambahkan Resource</button>
+      </div>
+      <div class="filterRow">
+        <input id="resourceSearch" placeholder="🔎 Cari resource...">
+        <select id="resourceFilter"><option value="all">Semua</option><option value="need">Masih kurang</option><option value="ready">Sudah cukup</option></select>
+      </div>
+      <div id="resourceList"></div>
+      <button id="clearResources" class="danger">Hapus semua resource</button>
+    </section>
 
-<footer>Township Tool • Companion aman untuk perencanaan</footer>
+    <section id="production" class="panel">
+      <div class="titleRow"><div><p class="eyebrow">FACTORY</p><h2>Produksi</h2></div></div>
+      <div class="card form">
+        <label>Nama produksi<input id="prodName" placeholder="Mis. Batch Wheat"></label>
+        <div class="two"><label>Jumlah<input id="quantity" type="number" min="1" value="1"></label><label>Menit/item<input id="minutes" type="number" min="0" step=".1" value="10"></label></div>
+        <label>Jumlah pabrik aktif<input id="factories" type="number" min="1" value="1"></label>
+      </div>
+      <div class="timeCard">
+        <span>⏳ TOTAL WAKTU</span>
+        <strong id="totalTime">10m</strong>
+        <p id="finishText">Estimasi produksi</p>
+        <div class="timerBtns"><button id="startTimer" class="primary">▶ Mulai Timer</button><button id="stopTimer" class="secondary">■ Stop</button></div>
+      </div>
+      <div class="card">
+        <div class="sectionHead"><b>Produksi tersimpan</b><button id="clearProduction" class="miniBtn">Bersihkan</button></div>
+        <div id="productionList" class="productionList"></div>
+      </div>
+    </section>
+
+    <section id="tasks" class="panel">
+      <div class="titleRow"><div><p class="eyebrow">MISSION BOARD</p><h2>Tasks</h2></div><span class="badge" id="taskBadge">0 selesai</span></div>
+      <div class="card form">
+        <label>Nama task<input id="taskName" placeholder="Mis. Kumpulkan 20 Wheat"></label>
+        <div class="two"><label>XP<input id="taskXp" type="number" min="1" value="25"></label><label>Prioritas<select id="taskPriority"><option value="normal">Normal</option><option value="high">Tinggi</option></select></label></div>
+        <button id="addTask" class="primary">＋ Tambahkan Task</button>
+      </div>
+      <div class="filterRow"><select id="taskFilter"><option value="all">Semua task</option><option value="open">Belum selesai</option><option value="done">Selesai</option></select></div>
+      <div id="taskList"></div>
+      <button id="clearTasks" class="danger">Hapus semua task</button>
+    </section>
+  </main>
+
+  <footer>Township Tool V2 • Companion aman untuk perencanaan • Tidak memodifikasi game/server</footer>
 </div>
-<script src="app.js"></script>
+<div id="toast" class="toast"></div>
+<script src="app.js"></script><script>if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js").catch(()=>{});}</script>
 </body>
 </html>
