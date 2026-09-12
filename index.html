@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#18233f">
+<meta name="description" content="Township Tool - Game Companion">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+<title>Township Tool</title>
+</head>
+<body>
+<div class="app">
+<header class="hero">
+  <div class="brand">
+    <div class="logo">🏘️</div>
+    <div><h1>Township Tool</h1><p>Game Companion</p></div>
+  </div>
+  <button id="themeBtn" class="iconBtn" aria-label="Tema">☀️</button>
+</header>
+
+<section class="stats">
+  <div class="stat"><span>📦</span><b id="itemCount">0</b><small>Items</small></div>
+  <div class="stat"><span>⏱️</span><b id="totalMinutes">0</b><small>Menit</small></div>
+  <div class="stat"><span>⭐</span><b id="score">0</b><small>Tasks</small></div>
+</section>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="dashboard">⌂<small>Home</small></button>
+  <button class="tab" data-tab="resources">📦<small>Resource</small></button>
+  <button class="tab" data-tab="production">⚙️<small>Produksi</small></button>
+</nav>
+
+<main>
+<section id="dashboard" class="panel active">
+  <div class="titleRow"><div><p class="eyebrow">TOWN CENTER</p><h2>Dashboard</h2></div><span class="badge">ONLINE READY</span></div>
+  <div class="banner">
+    <div><h3>Rencanakan kotamu</h3><p>Hitung resource dan waktu produksi dengan cepat.</p></div>
+    <div class="bannerIcon">🏡</div>
+  </div>
+  <div class="grid">
+    <button class="feature" data-go="resources"><span>📦</span><b>Resource</b><small>Kelola kebutuhan</small></button>
+    <button class="feature" data-go="production"><span>⏱️</span><b>Produksi</b><small>Hitung waktu</small></button>
+  </div>
+  <div class="card tip"><span>💡</span><div><b>Tips</b><p>Tap item pada daftar resource untuk menghapusnya.</p></div></div>
+</section>
+
+<section id="resources" class="panel">
+  <div class="titleRow"><div><p class="eyebrow">INVENTORY</p><h2>Resource</h2></div></div>
+  <div class="card form">
+    <input id="itemName" placeholder="Nama item, mis. Wheat">
+    <div class="two"><input id="owned" type="number" min="0" placeholder="Dimiliki"><input id="needed" type="number" min="0" placeholder="Dibutuhkan"></div>
+    <button id="addResource" class="primary">＋ Tambahkan Resource</button>
+  </div>
+  <div id="resourceList"></div>
+  <button id="clearResources" class="danger">Hapus semua</button>
+</section>
+
+<section id="production" class="panel">
+  <div class="titleRow"><div><p class="eyebrow">FACTORY</p><h2>Produksi</h2></div></div>
+  <div class="card form">
+    <label>Jumlah item<input id="quantity" type="number" min="0" value="1"></label>
+    <label>Waktu per item (menit)<input id="minutes" type="number" min="0" step=".1" value="10"></label>
+  </div>
+  <div class="timeCard">
+    <span>⏳ TOTAL WAKTU</span>
+    <strong id="totalTime">0j 10m</strong>
+    <p>Estimasi berdasarkan input kamu</p>
+  </div>
+</section>
+</main>
+
+<footer>Township Tool • Companion aman untuk perencanaan</footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
